@@ -10,7 +10,7 @@ let currentPageName = "";
 
 if (page.includes("1measurement.html") || page === "index.html") {
     currentPageName = "measurement";
-} else if (page.includes("valve.html")) {
+} else if (page.includes("2valves.html")) {
     currentPageName = "valves";
 }
 
@@ -22,11 +22,11 @@ async function loadProducts() {
         products = allProducts.filter(item => item.page === currentPageName);
         
         filteredProducts = [...products]; 
-        console.log(`โหลดสินค้าของหน้า ${currentPageName} สำเร็จ:`, products);
+        console.log(`Success: ${currentPageName} items loaded:`, products);
         
         renderProducts(); 
     } catch (error) {
-        console.error("โหลดข้อมูลไม่เข้า:", error);
+        console.error("Failed to load data:", error);
     }
 }
 //2
@@ -53,7 +53,7 @@ function renderProducts() {
     if (totalElement) totalElement.innerText = totalCount;
 
     if (paginatedItems.length === 0) {
-        grid.innerHTML = `<p class="col-span-full text-center text-gray-400 py-20">ไม่พบสินค้าในหมวดหมู่นี้</p>`;
+        grid.innerHTML = `<p class="col-span-full text-center text-gray-400 py-20">No products found in this category</p>`;
     }
 
     paginatedItems.forEach(item => {
@@ -137,10 +137,10 @@ function updateCartUI() {
     const cartTotal = document.getElementById('cart-total');
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     if(cartCount) cartCount.innerText = totalItems;
-    if(cartTotal) cartTotal.innerText = totalItems + " ชิ้น";
+    if(cartTotal) cartTotal.innerText = totalItems + " items";
 
     if (cart.length === 0) {
-        cartItemsDiv.innerHTML = `<p class="text-center text-gray-400 mt-10">ตะกร้าของคุณยังว่างอยู่...</p>`;
+        cartItemsDiv.innerHTML = `<p class="text-center text-gray-400 mt-10">Your shopping cart is empty...</p>`;
     } else {
         cartItemsDiv.innerHTML = cart.map((item, index) => `
             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
@@ -175,7 +175,7 @@ function removeItem(index) {
     updateCartUI();
 }
 
-// 5. Modal
+//5
 function openModal(name, sku, cats, desc, imgSrc) {
     if(document.getElementById('modalTitle')) document.getElementById('modalTitle').innerText = name;
     if(document.getElementById('modalSku')) document.getElementById('modalSku').innerText = "SKU: " + sku;
@@ -231,6 +231,18 @@ function filterByCategory(categoryName) {
     
     renderProducts();
 }
+//6.5
+function filterBySub(subName) {
+    filteredProducts = products.filter(item => item.subCategory === subName);
+
+    currentPage = 1;
+
+    renderProducts();
+
+    if(document.getElementById('categoryTitle')) {
+        document.getElementById('categoryTitle').innerText = subName.toUpperCase();
+    }
+}
 
 //7
 window.onload = function() {
@@ -246,3 +258,68 @@ window.onload = function() {
     loadProducts(); 
     updateCartUI(); 
 };
+//8
+function searchProducts() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    filteredProducts = products.filter(item => {
+        const nameMatch = item.name.toLowerCase().includes(searchTerm);
+        const skuMatch = item.sku ? item.sku.toLowerCase().includes(searchTerm) : false;
+        
+        return nameMatch || skuMatch;
+    });
+
+    currentPage = 1;
+
+    renderProducts();
+}
+
+function searchSidebarProducts() {
+    const searchTerm = document.getElementById('sidebarSearchInput').value.toLowerCase().trim();
+
+    filteredProducts = products.filter(item => {
+        const nameMatch = item.name.toLowerCase().includes(searchTerm);
+        const skuMatch = item.sku ? item.sku.toLowerCase().includes(searchTerm) : false;
+        return nameMatch || skuMatch;
+    });
+
+    currentPage = 1;
+    renderProducts();
+}
+//9
+function updateSidebar(mode) {
+    const sidebarUl = document.getElementById('sidebarMenu');
+    if (!sidebarUl) return;
+    
+    if (mode === 'main') {
+        sidebarUl.innerHTML = `
+            <li onclick="loadSubCategory('pressure')" class="px-4 py-3 border-b hover:bg-blue-50 cursor-pointer flex justify-between">
+                Pressure and Level <span>(15)</span>
+            </li>
+            <li onclick="loadSubCategory('transducer')" class="px-4 py-3 border-b hover:bg-blue-50 cursor-pointer flex justify-between">
+                Transducers, Converters... <span>(19)</span>
+            </li>
+            `;
+        if(document.getElementById('backBtn')) document.getElementById('backBtn').classList.add('hidden');
+        if(document.getElementById('sidebarTitle')) document.getElementById('sidebarTitle').innerText = "หมวดหมู่สินค้า";
+    } 
+    else if (mode === 'transducer') {
+        sidebarUl.innerHTML = `
+            <li onclick="filterBySub('KINEAX')" class="px-4 py-3 border-b hover:bg-blue-50 cursor-pointer italic">- KINEAX (2)</li>
+            <li onclick="filterBySub('SINEAX')" class="px-4 py-3 border-b hover:bg-blue-50 cursor-pointer italic">- SINEAX (3)</li>
+        `;
+        if(document.getElementById('backBtn')) document.getElementById('backBtn').classList.remove('hidden');
+        if(document.getElementById('sidebarTitle')) document.getElementById('sidebarTitle').innerText = "Measurement ";
+    }
+}
+
+function loadSubCategory(catName) {
+    updateSidebar(catName);
+    
+    filteredProducts = products.filter(item => item.subCategory === catName); 
+    renderProducts();
+    
+    if(document.getElementById('categoryTitle')) {
+        document.getElementById('categoryTitle').innerText = catName.toUpperCase();
+    }
+}
