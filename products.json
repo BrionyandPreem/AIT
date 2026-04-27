@@ -2,7 +2,7 @@
   {
     "name": "304 Manifold Accessory",
     "sku": "304",
-    "page": "measurement",
+    "page": ["products","measurement"],
     "category": "measurement,pressure,instrument",
     "categoryTag": ["measurement","pressure","instrument"],
     "img": "imgpro/304_Manifold_Accessory.jpg",

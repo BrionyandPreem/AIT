@@ -10,6 +10,8 @@ let currentPageName = "";
 
 if (page.includes("1measurement.html") || page === "index.html") {
     currentPageName = "measurement";
+} else if (page.includes("products.html")) {
+    currentPageName = "products";
 } else if (page.includes("2valves.html")) {
     currentPageName = "valves";
 }
@@ -57,26 +59,33 @@ function renderProducts() {
     }
 
     paginatedItems.forEach(item => {
-        const card = `
-            <div class="product-card group text-center flex flex-col items-center" data-category="${item.categoryTag}">
-                <div class="h-40 w-full bg-gray-50 mb-4 flex items-center justify-center p-4 overflow-hidden">
-                    <img src="${item.img}" alt="${item.name}" class="max-h-full group-hover:scale-110 transition duration-300">
-                </div>
-                <h3 onclick="openModal('${item.name}', '${item.sku}', '${item.category}', '${item.desc}', '${item.img}')" 
-                    class="text-sm font-medium text-gray-800 mb-1 cursor-pointer hover:text-blue-600 transition">
-                    ${item.name}
-                </h3>
-                <p onclick="openModal('${item.name}', '${item.sku}', '${item.category}', '${item.desc}', '${item.img}')" 
-                    class="text-blue-400 text-xs mb-4 cursor-pointer hover:underline">
-                    Read more
-                </p>
-                <button onclick="addToCart('${item.name}', '${item.img}')" class="bg-orange-500 text-white px-4 py-1.5 text-[11px] rounded font-bold shadow-sm hover:bg-orange-600 transition">
-                    <i class="fa-solid fa-plus mr-1"></i> Add to Cart
+    const card = `
+    <div onclick="openModal('${item.name}', '${item.sku}', '${item.categoryTag}', '${item.desc}', '${item.img}')" 
+         class="product-card group bg-white rounded-[2rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-8px] transition-all duration-500 flex flex-col h-full overflow-hidden border border-white cursor-pointer">
+        
+        <div class="h-56 w-full bg-slate-50/50 flex items-center justify-center p-10 m-2 rounded-[1.8rem] self-center" style="width: calc(100% - 1rem);">
+            <img src="${item.img}" alt="${item.name}" class="max-h-full object-contain group-hover:scale-110 transition-transform duration-700">
+        </div>
+
+        <div class="p-6 flex flex-col flex-grow text-left">
+            <h3 class="text-[15px] font-bold text-slate-900 mb-2 line-clamp-2 h-10 leading-snug">
+                ${item.name}
+            </h3>
+            <p class="text-[10px] font-bold text-blue-500/50 uppercase tracking-widest mb-6">
+                CODE: ${item.sku || 'N/A'}
+            </p>
+            
+            <div class="mt-auto">
+                <button onclick="event.stopPropagation(); addToCart('${item.name}', '${item.img}')" 
+                        class="w-full bg-[#1a4066] text-white py-3 rounded-2xl text-[12px] font-semibold hover:bg-orange-500 shadow-lg shadow-blue-900/10 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cart-plus text-[10px]"></i> Add to Cart
                 </button>
             </div>
-        `;
-        grid.innerHTML += card;
-    });
+        </div>
+    </div>
+`;
+    grid.innerHTML += card;
+});
 
     renderPagination();
 }
@@ -323,3 +332,72 @@ function loadSubCategory(catName) {
         document.getElementById('categoryTitle').innerText = catName.toUpperCase();
     }
 }
+//10
+document.addEventListener('DOMContentLoaded', function() {
+    const menuBtn = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', () => {
+            // สลับคลาส hidden เพื่อโชว์หรือซ่อนเมนู
+            mobileMenu.classList.toggle('hidden');
+            
+            // เปลี่ยนไอคอนจาก 3 ขีด เป็นตัว X (ถ้าเปรมใช้ FontAwesome)
+            const icon = menuBtn.querySelector('i');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-xmark');
+        });
+    }
+});
+//10.5
+// --- 1. ระบบ Mobile Menu (Side Drawer) ---
+function toggleMobileMenu() {
+    const drawer = document.getElementById('mobile-menu-drawer');
+    const overlay = document.getElementById('mobile-menu-overlay');
+    
+    // ดัก Error: ถ้าไม่มีของ ให้หยุดทำงานทันที
+    if (!drawer || !overlay) return;
+
+    const isClosed = drawer.style.right === '-100%' || drawer.style.right === '';
+
+    if (isClosed) {
+        drawer.style.right = '0';
+        overlay.classList.remove('invisible', 'opacity-0');
+        overlay.classList.add('visible', 'opacity-100');
+        document.body.style.overflow = 'hidden';
+    } else {
+        drawer.style.right = '-100%';
+        overlay.classList.remove('visible', 'opacity-100');
+        overlay.classList.add('invisible', 'opacity-0');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// --- 2. ระบบพับเมนูย่อย (Accordion) ---
+function toggleAccordion(id) {
+    const subMenu = document.getElementById(id);
+    const icon = document.getElementById(id + '-icon');
+
+    if (!subMenu) return;
+
+    if (subMenu.classList.contains('hidden')) {
+        subMenu.classList.remove('hidden');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+    } else {
+        subMenu.classList.add('hidden');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// --- 3. ระบบอัปเดตตัวเลขตะกร้า (กัน Error ตอนอยู่หน้าอื่น) ---
+function updateCartUI() {
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        // ดึงข้อมูลจาก localStorage มาโชว์ ถ้าไม่มีให้เป็น 0
+        const currentCart = JSON.parse(localStorage.getItem('cart')) || [];
+        cartCount.innerText = currentCart.length;
+    }
+}
+
+// เรียกใช้อัปเดตตะกร้าทุกครั้งที่โหลดหน้าเว็บ
+document.addEventListener('DOMContentLoaded', updateCartUI);
